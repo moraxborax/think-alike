@@ -1,7 +1,8 @@
 # Think Alike
-Think Alike is a full-stack app for publishing thoughts, embedding, and exploring nearby ideas through graph and cluster views.
+Think Alike maps the geometry of human connection, leveraging iterative MDS to cluster and visualize the semantic resonance between your thoughts and a living universe of like-minded thinkers.
 
 ![](./imgs/image.png)
+![](./imgs/image2.png)
 
 ## Stack
 
