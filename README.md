@@ -1,6 +1,7 @@
 # Think Alike
+Think Alike is a full-stack app for publishing thoughts, embedding, and exploring nearby ideas through graph and cluster views.
 
-Think Alike is a full-stack app for publishing thoughts, embedding them with OpenAI, and exploring nearby ideas through graph and cluster views.
+![](./imgs/image.png)
 
 ## Stack
 
@@ -12,7 +13,7 @@ Think Alike is a full-stack app for publishing thoughts, embedding them with Ope
 ## Features
 
 - GitHub login with allow-list and block-list controls
-- Thought publishing with OpenAI embedding generation
+- Thought publishing with embedding generation
 - Daily publish rate limit, defaulting to 30 thoughts per user
 - Similar-thought graph centered on a chosen thought
 - Kanban-style floating cluster map with recent-thought bias
