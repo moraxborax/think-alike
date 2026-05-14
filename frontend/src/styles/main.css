@@ -238,6 +238,45 @@ button {
   color: rgba(237, 242, 255, 0.56);
 }
 
+.thought-form :is(.el-input__wrapper, .el-textarea__inner, .el-select__wrapper),
+.thought-search .el-input__wrapper,
+.thought-select .el-select__wrapper {
+  background: rgba(7, 10, 18, 0.96);
+  box-shadow: inset 0 0 0 1px rgba(139, 161, 255, 0.12);
+}
+
+.thought-form .el-input__inner,
+.thought-form .el-textarea__inner,
+.thought-search .el-input__inner,
+.thought-select .el-select__selected-item,
+.thought-select .el-select__placeholder {
+  color: #edf2ff;
+}
+
+.thought-form .el-input__inner::placeholder,
+.thought-form .el-textarea__inner::placeholder,
+.thought-search .el-input__inner::placeholder,
+.thought-select .el-select__placeholder {
+  color: rgba(237, 242, 255, 0.48);
+}
+
+.thought-form .el-textarea__inner {
+  min-height: 180px;
+  border: 0;
+}
+
+.thought-form :is(.el-input__wrapper, .el-select__wrapper):hover,
+.thought-search .el-input__wrapper:hover,
+.thought-select .el-select__wrapper:hover {
+  box-shadow: inset 0 0 0 1px rgba(139, 161, 255, 0.2);
+}
+
+.thought-form :is(.el-input__wrapper, .el-select__wrapper).is-focus,
+.thought-search .el-input__wrapper.is-focus,
+.thought-select .el-select__wrapper.is-focused {
+  box-shadow: inset 0 0 0 1px rgba(139, 161, 255, 0.38), 0 0 0 4px rgba(124, 77, 255, 0.12);
+}
+
 .selected-thought-summary {
   margin-bottom: 18px;
   padding: 16px 18px;
@@ -326,11 +365,6 @@ button {
   background: rgba(255, 255, 255, 0.04);
   color: #edf2ff;
   cursor: pointer;
-}
-
-.graph-button-primary {
-  border-color: rgba(146, 168, 255, 0.42);
-  background: linear-gradient(135deg, rgba(135, 168, 255, 0.28), rgba(124, 77, 255, 0.34));
 }
 
 .graph-svg {
@@ -466,28 +500,23 @@ button {
   border: 1px solid rgba(146, 168, 255, 0.12);
 }
 
-.thought-list,
-.cluster-list {
+.thought-list {
   display: grid;
   gap: 14px;
 }
 
-.thought-card,
-.cluster-card {
+.thought-card {
   padding: 18px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.thought-card h3,
-.cluster-card h3 {
+.thought-card h3 {
   margin: 0 0 8px;
 }
 
 .thought-card p,
-.cluster-card p,
-.cluster-card ul,
 .empty-state {
   color: rgba(237, 242, 255, 0.7);
 }

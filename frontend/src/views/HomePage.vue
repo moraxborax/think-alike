@@ -139,7 +139,7 @@ onMounted(async () => {
         <span class="pill">30 per day</span>
       </div>
 
-      <el-form label-position="top" @submit.prevent="publishThought">
+      <el-form class="thought-form" label-position="top" @submit.prevent="publishThought">
         <el-form-item label="Title">
           <el-input v-model="form.title" maxlength="120" show-word-limit placeholder="A sharp headline for your thought" />
         </el-form-item>
