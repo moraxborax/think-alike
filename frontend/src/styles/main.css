@@ -234,6 +234,14 @@ button {
   gap: 12px;
 }
 
+.thought-option-discover {
+  align-items: baseline;
+}
+
+.thought-option-discover small {
+  text-align: right;
+}
+
 .thought-option small {
   color: rgba(237, 242, 255, 0.56);
 }
