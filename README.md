@@ -107,7 +107,7 @@ The runtime container uses a non-root user and only includes the compiled backen
 To run the app against a local `llama.cpp` embedding server with `ai/qwen3-embedding:4B-Q4_K_M`, place the GGUF model at:
 
 ```bash
-./models/ai_qwen3-embedding_4b-q4_k_m.gguf
+./models/qwen3-embedding_4b.gguf
 ```
 
 Then start the alternate stack:
@@ -120,6 +120,6 @@ This compose file adds an `embeddings` service and overrides the app env to use:
 
 - `OPENAI_API_KEY=dummy`
 - `OPENAI_EMBEDDING_URL=http://embeddings:8080/v1/embeddings`
-- `OPENAI_EMBEDDING_MODEL=ai/qwen3-embedding:4B-Q4_K_M`
+- `OPENAI_EMBEDDING_MODEL=ai/qwen3-embedding
 
 It is configured for an NVIDIA GPU-backed `llama.cpp` container and publishes the embedding server on `localhost:8080`.
