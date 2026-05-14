@@ -46,11 +46,10 @@ struct GithubCallback {
 
 async fn start_github_auth(State(state): State<Arc<AppState>>) -> Result<Response, AppError> {
     let oauth_state = state.auth.new_oauth_state().await;
-    let redirect_uri = format!("{}/api/auth/github/callback", state.config.app_url);
     let location = format!(
         "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&scope=read:user&state={}",
         urlencoding::encode(&state.config.github_client_id),
-        urlencoding::encode(&redirect_uri),
+        urlencoding::encode(&state.config.github_redirect_uri),
         urlencoding::encode(&oauth_state)
     );
 
@@ -76,7 +75,6 @@ async fn finish_github_auth(
     state.auth.verify_state_cookie(&headers, &query.state)?;
     state.auth.verify_oauth_state(&query.state).await?;
 
-    let redirect_uri = format!("{}/api/auth/github/callback", state.config.app_url);
     let client = Client::new();
     let token_response = client
         .post("https://github.com/login/oauth/access_token")
@@ -85,7 +83,7 @@ async fn finish_github_auth(
             "client_id": state.config.github_client_id,
             "client_secret": state.config.github_client_secret,
             "code": query.code,
-            "redirect_uri": redirect_uri,
+            "redirect_uri": state.config.github_redirect_uri,
             "state": query.state,
         }))
         .send()

@@ -5,6 +5,7 @@ use std::{collections::HashSet, env, path::PathBuf};
 pub struct Config {
     pub database_url: String,
     pub app_url: String,
+    pub github_redirect_uri: String,
     pub session_secret: String,
     pub github_client_id: String,
     pub github_client_secret: String,
@@ -21,6 +22,8 @@ impl Config {
     pub fn from_env() -> anyhow::Result<Self> {
         let database_url = required("DATABASE_URL")?;
         let app_url = required("APP_URL")?;
+        let github_redirect_uri = env::var("GITHUB_REDIRECT_URI")
+            .unwrap_or_else(|_| format!("{app_url}/api/auth/github/callback"));
         let session_secret = required("SESSION_SECRET")?;
         let github_client_id = required("GITHUB_CLIENT_ID")?;
         let github_client_secret = required("GITHUB_CLIENT_SECRET")?;
@@ -43,6 +46,7 @@ impl Config {
         Ok(Self {
             database_url,
             app_url,
+            github_redirect_uri,
             session_secret,
             github_client_id,
             github_client_secret,

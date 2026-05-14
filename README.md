@@ -30,6 +30,7 @@ Important variables:
 - `POSTGRES_PASSWORD`
 - `DATABASE_URL`
 - `APP_URL`
+- `GITHUB_REDIRECT_URI`
 - `SESSION_SECRET`
 - `GITHUB_CLIENT_ID`
 - `GITHUB_CLIENT_SECRET`
@@ -44,6 +45,8 @@ Optional variables:
 - `THOUGHTS_PER_DAY`: defaults to `30`
 
 `SESSION_SECRET` must be at least 32 characters.
+
+`GITHUB_REDIRECT_URI` should match the callback URL configured in your GitHub OAuth app. If it is omitted, the backend falls back to `${APP_URL}/api/auth/github/callback`.
 
 ## Local development
 
