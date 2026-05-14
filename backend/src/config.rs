@@ -15,6 +15,9 @@ pub struct Config {
     pub openai_embedding_url: String,
     pub openai_embedding_model: String,
     pub thoughts_per_day: i64,
+    pub kanban_cache_ttl_seconds: u64,
+    pub ip_rate_limit_requests: u32,
+    pub ip_rate_limit_window_seconds: u64,
     pub static_dir: PathBuf,
 }
 
@@ -38,6 +41,24 @@ impl Config {
             .transpose()
             .context("THOUGHTS_PER_DAY must be an integer")?
             .unwrap_or(30);
+        let kanban_cache_ttl_seconds = env::var("KANBAN_CACHE_TTL_SECONDS")
+            .ok()
+            .map(|value| value.parse::<u64>())
+            .transpose()
+            .context("KANBAN_CACHE_TTL_SECONDS must be an integer")?
+            .unwrap_or(15);
+        let ip_rate_limit_requests = env::var("IP_RATE_LIMIT_REQUESTS")
+            .ok()
+            .map(|value| value.parse::<u32>())
+            .transpose()
+            .context("IP_RATE_LIMIT_REQUESTS must be an integer")?
+            .unwrap_or(120);
+        let ip_rate_limit_window_seconds = env::var("IP_RATE_LIMIT_WINDOW_SECONDS")
+            .ok()
+            .map(|value| value.parse::<u64>())
+            .transpose()
+            .context("IP_RATE_LIMIT_WINDOW_SECONDS must be an integer")?
+            .unwrap_or(60);
 
         if session_secret.len() < 32 {
             bail!("SESSION_SECRET must be at least 32 characters");
@@ -56,6 +77,9 @@ impl Config {
             openai_embedding_url,
             openai_embedding_model,
             thoughts_per_day,
+            kanban_cache_ttl_seconds,
+            ip_rate_limit_requests,
+            ip_rate_limit_window_seconds,
             static_dir: PathBuf::from("frontend/dist"),
         })
     }

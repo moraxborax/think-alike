@@ -17,7 +17,7 @@ use rand::Rng;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Row};
-use std::{cmp::Ordering, sync::Arc};
+use std::{cmp::Ordering, sync::Arc, time::Duration as StdDuration};
 use uuid::Uuid;
 
 pub fn api_router() -> Router<Arc<AppState>> {
@@ -274,6 +274,8 @@ async fn create_thought(
     .execute(&state.pool)
     .await?;
 
+    invalidate_kanban_cache(&state).await;
+
     Ok((
         StatusCode::CREATED,
         Json(ThoughtResponse {
@@ -306,6 +308,8 @@ async fn delete_thought(
         return Err(AppError::NotFound("thought not found".to_string()));
     }
 
+    invalidate_kanban_cache(&state).await;
+
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -326,6 +330,8 @@ async fn refresh_thought(
     .fetch_optional(&state.pool)
     .await?
     .ok_or_else(|| AppError::NotFound("thought not found".to_string()))?;
+
+    invalidate_kanban_cache(&state).await;
 
     Ok(Json(ThoughtResponse {
         id: updated.id,
@@ -448,8 +454,8 @@ async fn similar_thoughts(
     }))
 }
 
-#[derive(Serialize)]
-struct KanbanNode {
+#[derive(Clone, Serialize)]
+pub struct KanbanNode {
     id: Uuid,
     title: String,
     description: String,
@@ -461,14 +467,22 @@ struct KanbanNode {
     age_hours: i64,
 }
 
-#[derive(Serialize)]
-struct KanbanResponse {
+#[derive(Clone, Serialize)]
+pub struct KanbanResponse {
     nodes: Vec<KanbanNode>,
 }
 
 async fn kanban_graph(
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<KanbanResponse>, AppError> {
+    if let Some(cached) = state
+        .kanban_cache
+        .get(StdDuration::from_secs(state.config.kanban_cache_ttl_seconds))
+        .await
+    {
+        return Ok(Json(cached));
+    }
+
     let thoughts = sqlx::query_as::<_, ThoughtRow>(
         "select thoughts.id, thoughts.user_id, thoughts.title, thoughts.description, thoughts.created_at, thoughts.embedding, thoughts.embedding_dimensions, users.login as author_login, users.avatar_url as author_avatar_url from thoughts join users on users.github_id = thoughts.user_id order by thoughts.created_at desc limit 400",
     )
@@ -506,7 +520,9 @@ async fn kanban_graph(
         .collect::<Vec<_>>();
 
     normalize_positions(&mut projected);
-    Ok(Json(KanbanResponse { nodes: projected }))
+    let response = KanbanResponse { nodes: projected };
+    state.kanban_cache.set(response.clone()).await;
+    Ok(Json(response))
 }
 
 fn weighted_recent_sample(mut thoughts: Vec<ThoughtRow>, target: usize) -> Vec<ThoughtRow> {
@@ -588,4 +604,8 @@ async fn upsert_authenticated_user(
 
 fn require_user(state: &Arc<AppState>, headers: &HeaderMap) -> Result<AuthenticatedUser, AppError> {
     authenticated_user_from_headers(&state.auth, headers)
+}
+
+async fn invalidate_kanban_cache(state: &Arc<AppState>) {
+    state.kanban_cache.invalidate().await;
 }

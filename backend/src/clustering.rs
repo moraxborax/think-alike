@@ -1,5 +1,3 @@
-use rand::prelude::*;
-
 pub fn project_to_2d(embedding: &[f32]) -> (f32, f32) {
     if embedding.is_empty() {
         return (0.0, 0.0);
