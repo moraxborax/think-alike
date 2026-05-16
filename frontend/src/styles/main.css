@@ -234,14 +234,6 @@ button {
   gap: 12px;
 }
 
-.thought-option-discover {
-  align-items: baseline;
-}
-
-.thought-option-discover small {
-  text-align: right;
-}
-
 .thought-option small {
   color: rgba(237, 242, 255, 0.56);
 }
@@ -464,6 +456,14 @@ button {
   border: 1px solid rgba(146, 168, 255, 0.18);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
   backdrop-filter: blur(16px);
+}
+
+.graph-inspector {
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  width: auto;
+  max-width: min(420px, calc(100% - 36px));
 }
 
 .graph-node-popover h3 {

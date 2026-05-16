@@ -4,8 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import GraphCanvas from '../components/GraphCanvas.vue'
 import { api, type SimilarGraph, type Thought } from '../lib/api'
 
-const myThoughts = ref<Thought[]>([])
-const discoverableThoughts = ref<Thought[]>([])
+const thoughts = ref<Thought[]>([])
 const graph = ref<SimilarGraph | null>(null)
 const publishing = ref(false)
 const loadingGraph = ref(false)
@@ -13,26 +12,16 @@ const selectedThoughtId = ref('')
 const searchTerm = ref('')
 const form = ref({ title: '', description: '' })
 
-const selectedThought = computed(
-  () => discoverableThoughts.value.find((thought) => thought.id === selectedThoughtId.value) ?? null
-)
-
-const selectedOwnThought = computed(
-  () => myThoughts.value.find((thought) => thought.id === selectedThoughtId.value) ?? null
-)
+const selectedThought = computed(() => thoughts.value.find((thought) => thought.id === selectedThoughtId.value) ?? null)
 
 const searchResults = computed(() => {
   const query = searchTerm.value.trim().toLowerCase()
   if (!query) {
-    return discoverableThoughts.value
+    return thoughts.value
   }
 
-  return discoverableThoughts.value.filter((thought) => {
-    return (
-      thought.title.toLowerCase().includes(query) ||
-      thought.description.toLowerCase().includes(query) ||
-      thought.author_login.toLowerCase().includes(query)
-    )
+  return thoughts.value.filter((thought) => {
+    return thought.title.toLowerCase().includes(query) || thought.description.toLowerCase().includes(query)
   })
 })
 
@@ -54,20 +43,14 @@ function formatAge(thought: Thought) {
   return `${months}mo ago`
 }
 
-async function loadThoughtCollections(preferredThoughtId?: string) {
-  const [mine, discoverable] = await Promise.all([
-    api<Thought[]>('/api/thoughts'),
-    api<Thought[]>('/api/thoughts/discover')
-  ])
-
-  myThoughts.value = mine
-  discoverableThoughts.value = discoverable
+async function loadThoughts(preferredThoughtId?: string) {
+  thoughts.value = await api<Thought[]>('/api/thoughts')
 
   const nextThoughtId = preferredThoughtId ?? selectedThoughtId.value
-  if (nextThoughtId && discoverableThoughts.value.some((thought) => thought.id === nextThoughtId)) {
+  if (nextThoughtId && thoughts.value.some((thought) => thought.id === nextThoughtId)) {
     selectedThoughtId.value = nextThoughtId
   } else {
-    selectedThoughtId.value = discoverableThoughts.value[0]?.id ?? ''
+    selectedThoughtId.value = thoughts.value[0]?.id ?? ''
   }
 
   await loadGraph()
@@ -82,7 +65,7 @@ async function publishThought() {
     })
     form.value = { title: '', description: '' }
     ElMessage.success('Thought published')
-    await loadThoughtCollections(created.id)
+    await loadThoughts(created.id)
   } catch (error) {
     ElMessage.error(error instanceof Error ? error.message : 'Failed to publish thought')
   } finally {
@@ -122,7 +105,7 @@ async function deleteThought(thought: Thought) {
   try {
     await api(`/api/thoughts/${thought.id}`, { method: 'DELETE' })
     ElMessage.success('Thought deleted')
-    await loadThoughtCollections(thought.id === selectedThoughtId.value ? undefined : selectedThoughtId.value)
+    await loadThoughts(thought.id === selectedThoughtId.value ? undefined : selectedThoughtId.value)
   } catch (error) {
     ElMessage.error(error instanceof Error ? error.message : 'Failed to delete thought')
   }
@@ -132,7 +115,7 @@ async function refreshThought(thought: Thought) {
   try {
     const refreshed = await api<Thought>(`/api/thoughts/${thought.id}/refresh`, { method: 'POST' })
     ElMessage.success('Thought refreshed')
-    await loadThoughtCollections(refreshed.id)
+    await loadThoughts(refreshed.id)
   } catch (error) {
     ElMessage.error(error instanceof Error ? error.message : 'Failed to refresh thought')
   }
@@ -140,7 +123,7 @@ async function refreshThought(thought: Thought) {
 
 onMounted(async () => {
   try {
-    await loadThoughtCollections()
+    await loadThoughts()
   } catch (error) {
     ElMessage.error(error instanceof Error ? error.message : 'Failed to load thoughts')
   }
@@ -182,21 +165,21 @@ onMounted(async () => {
           <p class="eyebrow">Find</p>
           <h2>Similarity graph</h2>
         </div>
-        <span class="pill">{{ discoverableThoughts.length }} discoverable</span>
+        <span class="pill">{{ thoughts.length }} anchors</span>
       </div>
 
       <el-input
         v-model="searchTerm"
         class="thought-search"
         clearable
-        placeholder="Search all thoughts by title, description, or author"
+        placeholder="Search your thoughts by title or description"
       />
 
-      <el-select v-model="selectedThoughtId" filterable placeholder="Choose any thought" class="thought-select" @change="loadGraph">
+      <el-select v-model="selectedThoughtId" filterable placeholder="Choose one of your thoughts" class="thought-select" @change="loadGraph">
         <el-option v-for="thought in searchResults" :key="thought.id" :label="thought.title" :value="thought.id">
-          <div class="thought-option thought-option-discover">
+          <div class="thought-option">
             <span>{{ thought.title }}</span>
-            <small>@{{ thought.author_login }} · {{ formatAge(thought) }}</small>
+            <small>{{ formatAge(thought) }}</small>
           </div>
         </el-option>
       </el-select>
@@ -205,10 +188,10 @@ onMounted(async () => {
         <h3>{{ selectedThought.title }}</h3>
         <p>{{ selectedThought.description }}</p>
         <div class="thought-card-actions compact-actions">
-          <span class="thought-meta">@{{ selectedThought.author_login }} · {{ formatAge(selectedThought) }}</span>
-          <div v-if="selectedOwnThought" class="thought-action-buttons">
-            <button type="button" class="graph-button" @click="refreshThought(selectedOwnThought)">Refresh</button>
-            <button type="button" class="graph-button danger-button" @click="deleteThought(selectedOwnThought)">Delete</button>
+          <span class="thought-meta">Centered on your thought · {{ formatAge(selectedThought) }}</span>
+          <div class="thought-action-buttons">
+            <button type="button" class="graph-button" @click="refreshThought(selectedThought)">Refresh</button>
+            <button type="button" class="graph-button danger-button" @click="deleteThought(selectedThought)">Delete</button>
           </div>
         </div>
       </div>
@@ -230,8 +213,8 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-if="myThoughts.length" class="thought-list">
-        <article v-for="thought in myThoughts" :key="thought.id" class="thought-card">
+      <div v-if="thoughts.length" class="thought-list">
+        <article v-for="thought in thoughts" :key="thought.id" class="thought-card">
           <h3>{{ thought.title }}</h3>
           <p>{{ thought.description }}</p>
           <div class="thought-card-actions">

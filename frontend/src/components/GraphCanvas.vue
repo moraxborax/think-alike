@@ -126,10 +126,6 @@ function selectNode(nodeId: string) {
   }
 
   selectedNodeId.value = nodeId
-  const node = worldNodes.value.find((entry) => entry.id === nodeId)
-  if (node && !node.center) {
-    emit('explore', nodeId)
-  }
 }
 
 function onPointerDown(event: PointerEvent) {
@@ -219,7 +215,7 @@ onBeforeUnmount(() => {
 <template>
   <div ref="shellRef" class="graph-shell interactive-graph" :class="{ loading }">
     <div class="graph-toolbar">
-      <span>Drag to pan, scroll to zoom, and click a nearby node to pivot the graph around it.</span>
+      <span>Drag to pan, scroll to zoom, and inspect nearby people and ideas around your selected thought.</span>
       <div class="graph-toolbar-actions">
         <button type="button" class="graph-button" @click="fitView">Reset view</button>
         <button
@@ -289,6 +285,16 @@ onBeforeUnmount(() => {
         </g>
       </g>
     </svg>
+
+    <div v-if="selectedNode" class="graph-node-popover graph-inspector">
+      <h3>{{ selectedNode.title }}</h3>
+      <p>{{ selectedNode.description }}</p>
+      <div class="graph-detail-meta">
+        <span>@{{ selectedNode.author_login }}</span>
+        <span v-if="selectedNode.center">Anchor thought</span>
+        <span v-else>{{ `${Math.round(selectedNode.score * 100)}% similar` }}</span>
+      </div>
+    </div>
 
     <div v-if="loading" class="graph-loading">Refreshing graph...</div>
   </div>

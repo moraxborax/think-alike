@@ -27,7 +27,6 @@ pub fn api_router() -> Router<Arc<AppState>> {
         .route("/auth/github/callback", get(finish_github_auth))
         .route("/auth/logout", post(logout))
         .route("/auth/me", get(current_user))
-        .route("/thoughts/discover", get(list_discoverable_thoughts))
         .route("/thoughts", get(list_my_thoughts).post(create_thought))
         .route("/thoughts/:thought_id", delete(delete_thought))
         .route("/thoughts/:thought_id/refresh", post(refresh_thought))
@@ -222,35 +221,6 @@ async fn list_my_thoughts(
     ))
 }
 
-async fn list_discoverable_thoughts(
-    State(state): State<Arc<AppState>>,
-    headers: HeaderMap,
-) -> Result<Json<Vec<ThoughtResponse>>, AppError> {
-    let user = require_user(&state, &headers)?;
-    upsert_authenticated_user(&state, &user).await?;
-    let thoughts = sqlx::query_as::<_, ThoughtRow>(
-        "select thoughts.id, thoughts.user_id, thoughts.title, thoughts.description, thoughts.created_at, thoughts.embedding, thoughts.embedding_dimensions, users.login as author_login, users.avatar_url as author_avatar_url from thoughts join users on users.github_id = thoughts.user_id order by thoughts.created_at desc limit 300",
-    )
-    .fetch_all(&state.pool)
-    .await?;
-
-    Ok(Json(
-        thoughts
-            .into_iter()
-            .map(|thought| ThoughtResponse {
-                id: thought.id,
-                title: thought.title,
-                description: thought.description,
-                created_at: thought.created_at,
-                age_hours: age_hours_since(thought.created_at),
-                author_github_id: thought.user_id,
-                author_login: thought.author_login,
-                author_avatar_url: thought.author_avatar_url,
-            })
-            .collect(),
-    ))
-}
-
 async fn create_thought(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
@@ -400,9 +370,10 @@ async fn similar_thoughts(
     let user = require_user(&state, &headers)?;
     upsert_authenticated_user(&state, &user).await?;
     let center = sqlx::query_as::<_, ThoughtRow>(
-        "select thoughts.id, thoughts.user_id, thoughts.title, thoughts.description, thoughts.created_at, thoughts.embedding, thoughts.embedding_dimensions, users.login as author_login, users.avatar_url as author_avatar_url from thoughts join users on users.github_id = thoughts.user_id where thoughts.id = $1",
+        "select thoughts.id, thoughts.user_id, thoughts.title, thoughts.description, thoughts.created_at, thoughts.embedding, thoughts.embedding_dimensions, users.login as author_login, users.avatar_url as author_avatar_url from thoughts join users on users.github_id = thoughts.user_id where thoughts.id = $1 and thoughts.user_id = $2",
     )
     .bind(thought_id)
+    .bind(user.github_id)
     .fetch_optional(&state.pool)
     .await?
     .ok_or_else(|| AppError::NotFound("thought not found".to_string()))?;
