@@ -14,6 +14,7 @@ const emit = defineEmits<{
 const shellRef = ref<HTMLDivElement | null>(null)
 const svgRef = ref<SVGSVGElement | null>(null)
 const selectedNodeId = ref('')
+const inspectorDismissed = ref(false)
 const viewport = reactive({ width: 960, height: 520 })
 const camera = reactive({ x: 0, y: 0, zoom: 1 })
 
@@ -71,6 +72,7 @@ const edges = computed(() => worldNodes.value.filter((node) => !node.center))
 const selectedNode = computed(
   () => worldNodes.value.find((node) => node.id === selectedNodeId.value) ?? worldNodes.value[0] ?? null
 )
+const visibleInspectorNode = computed(() => (inspectorDismissed.value ? null : selectedNode.value))
 
 const sceneTransform = computed(() => `translate(${camera.x} ${camera.y}) scale(${camera.zoom})`)
 
@@ -126,6 +128,11 @@ function selectNode(nodeId: string) {
   }
 
   selectedNodeId.value = nodeId
+  inspectorDismissed.value = false
+}
+
+function closeInspector() {
+  inspectorDismissed.value = true
 }
 
 function onPointerDown(event: PointerEvent) {
@@ -189,6 +196,7 @@ watch(
   () => props.nodes,
   async () => {
     selectedNodeId.value = props.nodes.find((node) => node.center)?.id ?? props.nodes[0]?.id ?? ''
+    inspectorDismissed.value = false
     await nextTick()
     fitView()
   },
@@ -286,13 +294,14 @@ onBeforeUnmount(() => {
       </g>
     </svg>
 
-    <div v-if="selectedNode" class="graph-node-popover graph-inspector">
-      <h3>{{ selectedNode.title }}</h3>
-      <p>{{ selectedNode.description }}</p>
+    <div v-if="visibleInspectorNode" class="graph-node-popover graph-inspector">
+      <button type="button" class="graph-popover-close" @click="closeInspector">Close</button>
+      <h3>{{ visibleInspectorNode.title }}</h3>
+      <p>{{ visibleInspectorNode.description }}</p>
       <div class="graph-detail-meta">
-        <span>@{{ selectedNode.author_login }}</span>
-        <span v-if="selectedNode.center">Anchor thought</span>
-        <span v-else>{{ `${Math.round(selectedNode.score * 100)}% similar` }}</span>
+        <span>@{{ visibleInspectorNode.author_login }}</span>
+        <span v-if="visibleInspectorNode.center">Anchor thought</span>
+        <span v-else>{{ `${Math.round(visibleInspectorNode.score * 100)}% similar` }}</span>
       </div>
     </div>
 
