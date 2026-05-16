@@ -297,7 +297,9 @@ onBeforeUnmount(() => {
     <div v-if="visibleInspectorNode" class="graph-node-popover graph-inspector">
       <button type="button" class="graph-popover-close" @click="closeInspector">Close</button>
       <h3>{{ visibleInspectorNode.title }}</h3>
-      <p>{{ visibleInspectorNode.description }}</p>
+      <div class="graph-node-description" role="region" aria-label="Description">
+        {{ visibleInspectorNode.description }}
+      </div>
       <div class="graph-detail-meta">
         <span>@{{ visibleInspectorNode.author_login }}</span>
         <span v-if="visibleInspectorNode.center">Anchor thought</span>

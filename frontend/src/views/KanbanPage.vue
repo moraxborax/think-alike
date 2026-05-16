@@ -40,6 +40,21 @@ const animationState = reactive({
   durationMs: 0
 })
 
+/** Keep in sync with `.graph-node-description` in main.css (`max-height: min(42vh, 320px)`). */
+const GRAPH_NODE_DESCRIPTION_MAX_VH = 0.42
+const GRAPH_NODE_DESCRIPTION_MAX_PX = 320
+
+function graphPopoverEstimatedHeight(viewportHeight: number) {
+  const descMax = Math.min(viewportHeight * GRAPH_NODE_DESCRIPTION_MAX_VH, GRAPH_NODE_DESCRIPTION_MAX_PX)
+  const chrome =
+    18 * 2 +
+    40 +
+    50 +
+    14 +
+    44
+  return Math.ceil(descMax + chrome)
+}
+
 const isFullscreen = computed(() => route.query.fullscreen === 'true')
 const shouldMoveAround = computed(() => route.query.movearound !== undefined)
 
@@ -112,9 +127,11 @@ const selectedCardStyle = computed(() => {
   const nodeX = camera.x + selectedNode.value.worldX * camera.zoom
   const nodeY = camera.y + selectedNode.value.worldY * camera.zoom
 
+  const maxTop = Math.max(86, viewport.height - graphPopoverEstimatedHeight(viewport.height))
+
   return {
     left: `${clamp(nodeX + 20, 14, viewport.width - cardWidth - 14)}px`,
-    top: `${clamp(nodeY - 10, 86, viewport.height - 210)}px`
+    top: `${clamp(nodeY - 10, 86, maxTop)}px`
   }
 })
 
@@ -465,7 +482,9 @@ onBeforeUnmount(() => {
         <div v-if="selectedNode && selectedCardStyle" class="graph-node-popover cloud-node-popover" :style="selectedCardStyle">
           <button type="button" class="graph-popover-close" @click="selectedNodeId = ''">Close</button>
           <h3>{{ selectedNode.title }}</h3>
-          <p>{{ selectedNode.description }}</p>
+          <div class="graph-node-description" role="region" aria-label="Description">
+            {{ selectedNode.description }}
+          </div>
           <div class="graph-detail-meta">
             <span>{{ `Author @${selectedNode.author_login}` }}</span>
             <span>{{ Math.max(selectedNode.age_hours, 0) }}h ago</span>
