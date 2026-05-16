@@ -17,7 +17,7 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          ram: 1GB
+          memory: 1GB
 
   embeddings:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
@@ -52,7 +52,7 @@ services:
       resources:
         limits:
           cpus: '4.0'
-          ram: 16GB
+          memory: 16GB
         reservations:
           devices:
             - driver: nvidia
@@ -81,7 +81,7 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          ram: 1GB
+          memory: 1GB
 
 volumes:
   postgres-data:

@@ -19,7 +19,7 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          ram: 1GB
+          memory: 1GB
 
   app:
     build:
@@ -38,7 +38,7 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          ram: 1GB
+          memory: 1GB
 
 
 volumes:
